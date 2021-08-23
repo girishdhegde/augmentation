@@ -130,6 +130,37 @@ class ColorJitter(nn.Module):
         return x
 
 
+
+class MixUp(nn.Module):
+    def __init__(self,
+        p = 0.5,
+        ):
+        '''
+        Batch level augmentation
+        '''
+        super().__init__()
+        self.p = p
+
+    def forward(self, x, y=None):
+        '''
+        x: [bs, ch, h, w] not [ch, h, w] bcoz it is batch level augmentation
+        y: labels if available - [bs, k]
+        '''
+        bs, ch, h, w = x.shape
+        if random.random() < self.p:
+            shuffled = torch.randperm(bs)
+            x_ = x[shuffled, ]
+            lmda = random.random()**0.5
+            x = lmda*x + (1 - lmda)*x_
+            if y is not None:
+                y_ = t[shuffled, ]
+                y = lmda*y + (1 - lmda)*y_
+        if y is not None:
+            return x, y
+        return x
+
+
+
 class CutOut(nn.Module):
     def __init__(self,
         num_holes = 1,
@@ -190,40 +221,6 @@ class CutMix(nn.Module):
         return x
 
 
-class CutMix(nn.Module):
-    def __init__(self,
-        p = 0.5,
-        ):
-        '''
-        Batch level augmentation
-        '''
-        super().__init__()
-        self.p = p
-
-    def forward(self, x, y=None):
-        '''
-        x: [bs, ch, h, w] not [ch, h, w] bcoz it is batch level augmentation
-        y: labels if available - [bs, k]
-        '''
-        bs, ch, h, w = x.shape
-        if random.random() < self.p:
-            shuffled = torch.randperm(bs)
-            x_ = x[shuffled, ]
-            lmda = random.random()**0.5
-            i = random.randint(0, h - 1)
-            j = random.randint(0, w - 1)
-            i_ = int(i + lmda*h)
-            j_ = int(j + lmda*w)
-            x[..., i: i_, j: j_] = x_[..., i: i_, j: j_]
-            if y is not None:
-                area = (torch.clip(i_, 0, h) - i)*(torch.clip(j_, 0, w) - j)
-                lmda = area/(w*h) 
-                y_ = y[shuffled, ]
-                y = lmda*y_ + (1 - lmda)*y
-        if y is not None:
-            return x, y
-        return x
-        
 # Unit test
 if __name__ == '__main__':
     import numpy as np
@@ -256,15 +253,31 @@ if __name__ == '__main__':
     # show(cutouted, './output/cutout.png')
 
     # CutMix
-    imgs = cv2.imread('./data/lena.tif')
-    imgs = torch.tensor(imgs[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+    # imgs = cv2.imread('./data/lena.tif')
+    # imgs = torch.tensor(imgs[:, :, ::-1].copy()).permute(2, 0, 1)/255.
 
-    img = cv2.imread('./data/lena2.tiff')
-    img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+    # img = cv2.imread('./data/lena2.tiff')
+    # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
 
-    imgs = torch.cat([imgs[None, :, :, :], img[None, :, :, :]], dim=0)
+    # imgs = torch.cat([imgs[None, :, :, :], img[None, :, :, :]], dim=0)
     
-    cutmix = CutMix(1.) 
-    cutmixed = cutmix(imgs)
+    # cutmix = CutMix(1.) 
+    # cutmixed = cutmix(imgs)
     
-    show(cutmixed[0], './output/cutout.png')
+    # show(cutmixed[0], './output/cutmix.png')
+
+    # MixUp
+    # imgs = cv2.imread('./data/lena.tif')
+    # imgs = torch.tensor(imgs[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+
+    # img = cv2.imread('./data/lena2.tiff')
+    # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+
+    # imgs = torch.cat([imgs[None, :, :, :], img[None, :, :, :]], dim=0)
+    
+    # mixup = MixUp(1.) 
+    # mixedup = mixup(imgs)
+    
+    # show(mixedup[0], './output/mixup.png')
+
+
