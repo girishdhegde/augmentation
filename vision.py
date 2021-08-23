@@ -75,43 +75,6 @@ def _hsv2rgb(img):
     return torch.einsum("...ijk, ...xijk -> ...xjk", mask.to(dtype=img.dtype), a4)
 
 
-
-class RandomHorizontalFlip(nn.Module):
-    def __init__(self, p=0.5):
-        super().__init__()
-        self.prob = p
-
-    def forward(self, x):
-        '''
-        Args:
-            x: Image tensor of dimension [..., h, w]            
-        Returns:
-            x[..., ::-1]
-        '''
-        if random.random() < self.p:
-            return torch.flip(x, dims=(-1, ))
-        else:
-            return x
-
-
-class RandomVerticalFlip(nn.Module):
-    def __init__(self, p=0.5):
-        super().__init__()
-        self.prob = p
-
-    def forward(self, x):
-        '''
-        Args:
-            x: Image tensor of dimension [..., h, w]            
-        Returns:
-            x[..., ::-1, :]
-        '''
-        if random.random() < self.p:
-            return torch.flip(x, dims=(-2, ))
-        else:
-            return x
-
-
 class ColorJitter(nn.Module):
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0):
         super().__init__()
@@ -167,33 +130,100 @@ class ColorJitter(nn.Module):
         return x
 
 
-class ColorDrop(nn.Module):
-    def __init__(self, p=0.5):
+class CutOut(nn.Module):
+    def __init__(self,
+        num_holes = 1,
+        max_h = 8,
+        max_w = 8,
+        fill_value = 0,
+        p = 0.5,
+        ):
         super().__init__()
+        self.num_holes = num_holes
+        self.max_h = max_h
+        self.max_w = max_w 
+        self.fill_value = fill_value
         self.p = p
 
     def forward(self, x):
-        if random.random() < self.p:
-            '''
-            Args:
-                img: image tensor of shape [ch, h, w]
-            '''
-            gray = (0.2989 * img[0] + 0.587 * img[1] + 0.114 * img[2])
-            return torch.stack([gray, gray, gray])
+        c, h, w = x.shape
+        for _ in range(self.num_holes):
+            if random.random() < self.p:
+                i = random.randint(0, h - 1)
+                j = random.randint(0, w - 1)
+                x[..., i: i + random.randint(0, self.max_h - 1), j: j + random.randint(0, self.max_w - 1)] = self.fill_value
         return x
 
 
-class RandomSolarize(nn.Module):
-    def __init__(self, threshold=0.5, p=0.5):
+class CutMix(nn.Module):
+    def __init__(self,
+        p = 0.5,
+        ):
+        '''
+        Batch level augmentation
+        '''
         super().__init__()
-        self.threshold = threshold
         self.p = p
 
-    def forward(self, x):
+    def forward(self, x, y=None):
+        '''
+        x: [bs, ch, h, w] not [ch, h, w] bcoz it is batch level augmentation
+        y: labels if available - [bs, k]
+        '''
+        bs, ch, h, w = x.shape
         if random.random() < self.p:
-            return x*(x <= self.threshold) + (1 - x)*(x > self.threshold)
+            shuffled = torch.randperm(bs)
+            x_ = x[shuffled, ]
+            lmda = random.random()**0.5
+            i = random.randint(0, h - 1)
+            j = random.randint(0, w - 1)
+            i_ = int(i + lmda*h)
+            j_ = int(j + lmda*w)
+            x[..., i: i_, j: j_] = x_[..., i: i_, j: j_]
+            if y is not None:
+                area = (torch.clip(i_, 0, h) - i)*(torch.clip(j_, 0, w) - j)
+                lmda = area/(w*h) 
+                y_ = y[shuffled, ]
+                y = lmda*y_ + (1 - lmda)*y
+        if y is not None:
+            return x, y
         return x
 
+
+class CutMix(nn.Module):
+    def __init__(self,
+        p = 0.5,
+        ):
+        '''
+        Batch level augmentation
+        '''
+        super().__init__()
+        self.p = p
+
+    def forward(self, x, y=None):
+        '''
+        x: [bs, ch, h, w] not [ch, h, w] bcoz it is batch level augmentation
+        y: labels if available - [bs, k]
+        '''
+        bs, ch, h, w = x.shape
+        if random.random() < self.p:
+            shuffled = torch.randperm(bs)
+            x_ = x[shuffled, ]
+            lmda = random.random()**0.5
+            i = random.randint(0, h - 1)
+            j = random.randint(0, w - 1)
+            i_ = int(i + lmda*h)
+            j_ = int(j + lmda*w)
+            x[..., i: i_, j: j_] = x_[..., i: i_, j: j_]
+            if y is not None:
+                area = (torch.clip(i_, 0, h) - i)*(torch.clip(j_, 0, w) - j)
+                lmda = area/(w*h) 
+                y_ = y[shuffled, ]
+                y = lmda*y_ + (1 - lmda)*y
+        if y is not None:
+            return x, y
+        return x
+        
 # Unit test
 if __name__ == '__main__':
     import numpy as np
@@ -207,21 +237,6 @@ if __name__ == '__main__':
         if save_path is not None:
             cv2.imwrite(save_path, img)
 
-    # # Horizonatal/Vertical Flip
-    # img = cv2.imread('./data/einstein.jpg')
-    # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
-
-    # hflip = RandomHorizontalFlip(1.0)
-    # flipped = hflip(img)
-    
-    # show(flipped, './output/hflip.png')
-
-    # vflip = RandomVerticalFlip(1.0)
-    # flipped = vflip(img)
-    
-    # show(flipped, './output/vflip.png')
-
-
     # # Jitter
     # img = cv2.imread('./data/einstein.jpg')
     # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
@@ -231,20 +246,25 @@ if __name__ == '__main__':
     
     # show(jittered, './output/jitter.png')
 
-    # # Color Droping
+    # # CutOut
     # img = cv2.imread('./data/einstein.jpg')
     # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
     
-    # drop = ColorDrop(p=1.0)
-    # dropped = drop(img)
+    # cutout = CutOut(5, 100, 100, 0., 1.0)
+    # cutouted = cutout(img)
     
-    # show(dropped, './output/drop.png')
+    # show(cutouted, './output/cutout.png')
 
-    # Solarization
-    img = cv2.imread('./data/einstein.jpg')
+    # CutMix
+    imgs = cv2.imread('./data/lena.tif')
+    imgs = torch.tensor(imgs[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+
+    img = cv2.imread('./data/lena2.tiff')
     img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
+
+    imgs = torch.cat([imgs[None, :, :, :], img[None, :, :, :]], dim=0)
     
-    solarize = RandomSolarize(threshold=0.5, p=1.0)
-    solarized = solarize(img)
+    cutmix = CutMix(1.) 
+    cutmixed = cutmix(imgs)
     
-    show(solarized, './output/solarize.png')
+    show(cutmixed[0], './output/cutout.png')
