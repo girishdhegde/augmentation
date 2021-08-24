@@ -6,7 +6,7 @@ This repo contains implemenatation of major data augmentations and dataloaders r
 - audio(speech)
 - text(language) 
 
-Dependencies:
+## Dependencies:
 - [PyTorch](https://pytorch.org/)
 
 ## Vision
