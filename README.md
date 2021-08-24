@@ -8,6 +8,7 @@ This repo contains implemenatation of major data augmentations and dataloaders r
 
 ## Dependencies:
 - [PyTorch](https://pytorch.org/)
+- [opencv-python](https://pypi.org/project/opencv-python/)
 
 ## Vision
 - Augmentations:
