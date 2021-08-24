@@ -52,7 +52,7 @@ Usefull links:
 ## Audio
 ## Text
 
-## Citation
+## Citationa
 ```bibtex
 @misc{grill2020bootstrap,
       title={Bootstrap your own latent: A new approach to self-supervised Learning}, 
