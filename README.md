@@ -23,10 +23,10 @@ This repo contains implemenatation of major data augmentations related to vision
         lambda = 1 - (x2-x1)*(y2-y1)/(W*H) . Adjust lambda to the exact area ratio.
         target = lambda * target + (1 - lambda) * targets
   ```
-  
+
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
-|<img src='./output/cutout.png'> CutOut |<img src='./output/cutmix.png'> CutMix |<img src='./output/mixup.png'> MixUp |
+|<img width=256 src='./output/cutout.png'> CutOut |<img width=256 src='./output/cutmix.png'> CutMix |<img width=256 src='./output/mixup.png'> MixUp |
 
 - [BYOL](https://arxiv.org/pdf/2006.07733.pdf) Augmentation Dataloader with torchvision
   - random cropping: a random patch of the image is selected, with an area uniformly sampled between 8%
