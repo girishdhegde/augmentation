@@ -53,6 +53,7 @@ Usefull links:
 ## Text
 
 ## Citation
+```bibtex
 @misc{grill2020bootstrap,
       title={Bootstrap your own latent: A new approach to self-supervised Learning}, 
       author={Jean-Bastien Grill and Florian Strub and Florent Altché and Corentin Tallec and Pierre H. Richemond and Elena Buchatskaya and Carl Doersch and Bernardo Avila Pires and Zhaohan Daniel Guo and Mohammad Gheshlaghi Azar and Bilal Piot and Koray Kavukcuoglu and Rémi Munos and Michal Valko},
@@ -61,3 +62,26 @@ Usefull links:
       archivePrefix={arXiv},
       primaryClass={cs.LG}
 }
+```
+
+```bibtex
+@misc{yun2019cutmix,
+      title={CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features}, 
+      author={Sangdoo Yun and Dongyoon Han and Seong Joon Oh and Sanghyuk Chun and Junsuk Choe and Youngjoon Yoo},
+      year={2019},
+      eprint={1905.04899},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
+
+```bibtex
+@misc{zhang2018mixup,
+      title={mixup: Beyond Empirical Risk Minimization}, 
+      author={Hongyi Zhang and Moustapha Cisse and Yann N. Dauphin and David Lopez-Paz},
+      year={2018},
+      eprint={1710.09412},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```

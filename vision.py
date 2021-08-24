@@ -244,7 +244,7 @@ if __name__ == '__main__':
     # show(jittered, './output/jitter.png')
 
     # # CutOut
-    # img = cv2.imread('./data/einstein.jpg')
+    # img = cv2.imread('./data/lena.tif')
     # img = torch.tensor(img[:, :, ::-1].copy()).permute(2, 0, 1)/255.
     
     # cutout = CutOut(5, 100, 100, 0., 1.0)
