@@ -11,25 +11,70 @@ This repo contains implemenatation of major data augmentations and dataloaders r
 - [opencv-python](https://pypi.org/project/opencv-python/)
 
 ## Vision
-- Augmentations:
+- **Augmentations**
   - [CutOut]()
+    - Usage:
+      ```python
+      from vision import CutOut
+
+      cutout = CutOut(num_holes=1, max_h=100, max_w=100, fill_value=0, p=0.5)
+      # img: torch image tensor of shape [ch, h, w] 
+      augmented = cutout(img)
+
+      # Image level augmentation -> can be used inside custom dataloader
+      from torchvision.utils.data import Dataset
+      
+      class CustomDataset(Dataset):
+        def __init__(self, ):
+          ...
+          self.cutout = CutOut()
+          ...
+
+        def __len__(self, ):
+          ...
+        
+        def __getitem__(self, idx):
+          ...
+          augmented = self.cutout(images[idx])
+          ...
+          return augmented
+
+      ```
+    
   - [MixUP](https://arxiv.org/pdf/1710.09412.pdf)
+    - Usage:
+      ```python
+      from vision import MixUp
+
+      mixup = MixUp(p=0.5)
+      # img: torch batch of image tensor of shape [bs, ch, h, w] 
+      augmented = mixup(batch_of_images)
+
+      # Batch level augmentation -> Cannot be used inside Custom loader
+      #                          -> Use inside train loop
+
+      for data, target in Dataloader:
+        augmented_data, augmentated_target = mixup(data, target)
+        ...
+
+      ```
+
   - [CutMix](https://github.com/clovaai/CutMix-PyTorch)
-  ```
-        inputs, targets = shuffle minibatch(input, target)
-        lambda = Unif(0,1)
-        rx = Unif(0,W)
-        ry = Unif(0,H)
-        rw = Sqrt(1 - lambda)
-        rh = Sqrt(1 - lambda)
-        x1 = Round(Clip(r x - r w / 2, min=0))
-        x2 = Round(Clip(r x + r w / 2, max=W))
-        y1 = Round(Clip(r y - r h / 2, min=0))
-        y2 = Round(Clip(r y + r h / 2, min=H))
-        input[:, :, x1:x2, y1:y2] = input s[:, :, x1:x2, y1:y2]
-        lambda = 1 - (x2-x1)*(y2-y1)/(W*H) . Adjust lambda to the exact area ratio.
-        target = lambda * target + (1 - lambda) * targets
-  ```
+    - Usage:
+      ```python
+      from vision import CutMix
+
+      cutmix = CutMix(p=0.5)
+      # img: torch batch of image tensor of shape [bs, ch, h, w] 
+      augmented = cutmix(batch_of_images)
+
+      # Batch level augmentation -> Cannot be used inside Custom loader
+      #                          -> Use inside train loop
+
+      for data, target in Dataloader:
+        augmented_data, augmentated_target = cutmix(data, target)
+        ...
+      ```
 
 | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|
@@ -46,6 +91,7 @@ This repo contains implemenatation of major data augmentations and dataloaders r
   - Gaussian blurring: for a 224×224 image, a square Gaussian kernel of size 23×23 is used, with a standard
     deviation uniformly sampled over [0.1, 2.0];
   - solarization: an optional color transformation x 7→ x · 1{x<0.5} + (1 − x)· 1{x≥0.5} for pixels with values in [0, 1].
+  - check [```vision_dataset.py```](./vision_dataset.py)
 
 Usefull links:
 - [TORCHVISION.TRANSFORMS](https://pytorch.org/vision/stable/transforms.html)
