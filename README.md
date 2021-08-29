@@ -106,6 +106,13 @@ Usefull links:
 ---
 ## Audio
 ---
+### [DFT](https://en.wikipedia.org/wiki/Fourier_transform)
+- [3Blue1Brown - Explaination of Fourier Transform](https://www.youtube.com/watch?v=spUNpyF58BY)
+
+### [Mel Spectogram]()
+### Augmentations
+### Sample Dataloader
+
 ---
 ## Text
 ---
