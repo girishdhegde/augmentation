@@ -29,6 +29,26 @@ def dft(f):
     return  F, torch.abs(F)/N, torch.atan2(F.imag, F.real)
 
 
+def idft(F):
+    """
+    Args:
+        F [List]: Fourier transform of some signal
+    Returns:
+        Reconstructed signal: f[n] = Sum(F(k).e(j.2pi.nk/N))
+    """
+    N = len(f)
+    e = torch.tensor(math.e, dtype=f.dtype)
+    j = torch.tensor(1j)
+    
+    f = torch.stack(
+        [
+            (F * (e**(j*2*math.pi*n*torch.arange(N)/N))).sum() 
+            for n in range(N)
+        ]
+    )/N
+    return  f
+
+
 def topk(F, T=1, top=None):
     """Func to get top components(in actual frequency(Hz)) from Fourier transform 
 
