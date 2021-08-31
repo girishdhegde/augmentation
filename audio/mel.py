@@ -46,18 +46,6 @@ def mel_spectogram(waveform, win_length, hop_length):
     frames = framing(waveform, win_length, hop_length)
     windows = windowing(frames)
 
-    # fig, axes = plt.subplots(1, 5, figsize=(24, 24))
-    # for i, ax in enumerate(axes):
-    #     ax.plot(windows[i])
-    #     # ax.axis('off')
-    #     ax.set_xticklabels(())
-    #     ax.set_yticklabels(())
-
-    # # fig.suptitle('Windowing(Framing(Waveform))')
-    # # fig.tight_layout()
-    # plt.savefig('../output/windowing.png')
-    # plt.show()
-
     freq = torch.fft.rfft(windows, dim=1, )
     freq = torch.abs(freq.T) * 2
 
