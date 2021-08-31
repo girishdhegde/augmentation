@@ -112,16 +112,7 @@ def stft(signal, nfft=None, hop_length=None, window=None):
 
     return spec
       
-
-def get_Hz_scale(f, T):
-    """
-    Args:
-        f: Frequency vector
-        T: Time period in seconds
-    """
-    return f/(T*f.shape[0])
-
-
+      
 def reconstruct(F, T, top=None):
     """ Func. to reconstruct signal from Fourier coefficient
     Args:
