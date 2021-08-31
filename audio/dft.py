@@ -6,6 +6,9 @@ import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning) 
+
 
 def dft(f):
     """
@@ -57,6 +60,58 @@ def idft(F, top=None):
 
     return  f
 
+
+def stft(signal, nfft=None, hop_length=None, window=None):
+    """
+    Args:
+        signal ([Tensor]): Time series 1D tensor
+        nfft ([int], optional): length of fft. Defaults to length(signal).
+        hop_length ([int], optional): jump steps. Defaults to nfft//4.
+        window ([String], optional): 'hann' or None. Defaults to torch.ones(nfft).
+    """
+    def get_hann_filter(N=512):
+        N -= 1
+        return 0.2 * (1 - (torch.cos(2*np.pi*torch.arange(N + 1)/N)))
+
+    def framing(signal, win_length, hop_length):
+        length = signal.shape
+        if len(length) > 1:
+            length = length[1]
+            signal = signal[0]
+        else: 
+            length = length[0]
+
+        frames = []
+        for start in range(0, length - win_length, hop_length):
+            frames.append(signal[start: start + win_length])
+
+        return torch.stack(frames)
+
+    def windowing(frames, window=None):
+        return frames*window[None, :]
+
+    N = signal.shape[0]
+    if nfft is None:
+        nfft = N
+    if hop_length is None:
+        hop_length = nfft//4
+    if window is None:
+        window = torch.ones(nfft)
+    else:
+        window = get_hann_filter(nfft)
+    window = window.to(signal.device)
+
+    frames = framing(signal, nfft, hop_length)
+    windows = windowing(frames, window)
+
+    spec = []
+    for window in windows:
+        ft, mag, ph = dft(window)
+        spec.append(mag)
+    spec = torch.stack(spec).T
+
+    return spec
+      
 
 def get_Hz_scale(f, T):
     """
@@ -173,7 +228,36 @@ def get_square(f, t, n=1000, scale=1, shift=0):
     return scale*wave + shift
 
 
+def plot_spectrogram(spec, N, nfft, sample_rate):
+    plt.figure(figsize=(20,8))
+    plt_spec = plt.imshow(spec, origin='lower', cmap='inferno')
+
+    T = N/sample_rate
+
+    ## create ylim
+    Nyticks = 10
+    ks = np.linspace(0, spec.shape[0], Nyticks)
+    Hz = ["{:5.2f}".format(i) for i in np.linspace(0, nfft//(2*T), Nyticks)]
+    plt.yticks(ks, Hz)
+    plt.ylabel("Frequency (Hz)")
+
+    ## create xlim
+    Nxticks = 10
+    ts_spec = np.linspace(0, spec.shape[1], Nxticks)
+    ts_spec_sec = ["{:4.2f}".format(i) for i in np.linspace(0, T, Nxticks)]
+    plt.xticks(ts_spec, ts_spec_sec)
+    plt.xlabel("Time (sec)")
+
+    plt.title("STFT Spectrogram")
+    plt.colorbar(use_gridspec=True, shrink=0.6)
+    plt.show()
+
+    return(plt_spec)
+
+
 if __name__ == '__main__':
+    import torchaudio 
+
     # Eg1: Combination of Sinusoidals
     N = 1000
     T = 3
@@ -240,3 +324,14 @@ if __name__ == '__main__':
     axs[2].plot(x, reconstructed)
     plt.tight_layout(pad=10)
     plt.show()
+
+    ####################################################################################
+    # STFT
+    ####################################################################################
+    audio_path = '../data/voice.wav'
+    nfft = 256
+    hop = 170
+    audio, sample_rate = torchaudio.load(audio_path)
+    spec = stft(audio[0], nfft=nfft, hop_length=hop, window='Hann')
+    spec_db = 20*torch.log10(spec[:spec.shape[0]//2, :])
+    plot_spectrogram(spec_db, audio.shape[-1], nfft, sample_rate)
