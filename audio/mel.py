@@ -56,7 +56,6 @@ def mel_spectogram(waveform, win_length, hop_length):
     return freq, spec, spec_in_db
 
 
-
 def get_mel_from_hertz(hertz):
     return 2595 * np.log10(1 + (hertz/ 700))
 
