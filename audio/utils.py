@@ -81,13 +81,6 @@ def play_audio(waveform, sample_rate):
     waveform = waveform.numpy()
     sd.play(waveform[0], sample_rate, blocking=True)
 
-    # num_channels, num_frames = waveform.shape
-    # if num_channels == 1:
-    #     sd.play(waveform[0], sample_rate))
-    # elif num_channels == 2:
-    #     display(Audio((waveform[0], waveform[1]), rate=sample_rate))
-    # else:
-    #     raise ValueError("Waveform with more than 2 channels are not supported.")
 
 def inspect_file(path):
     print("-" * 10)
@@ -95,6 +88,7 @@ def inspect_file(path):
     print("-" * 10)
     print(f" - File size: {os.path.getsize(path)} bytes")
     print(f" - {torchaudio.info(path)}")
+
 
 def plot_spectrogram(spec, title=None, ylabel='freq_bin', aspect='auto', xmax=None, save=None):
     fig, axs = plt.subplots(1, 1)
