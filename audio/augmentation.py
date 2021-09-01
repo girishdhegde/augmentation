@@ -12,6 +12,7 @@ import numpy as np
 import sounddevice as sd
 
 
+# Author: Girish Hegde
 def rms(samples):
     """Root Mean Square (RMS)."""
     return torch.sqrt((samples**2).mean())
