@@ -111,6 +111,8 @@ Usefull links:
 
 ### [Mel Spectogram]()
 ### Augmentations
+- waveform augmentations
+- spectrogram augmentations
 ### Sample Dataloader
 
 ---
