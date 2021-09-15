@@ -63,7 +63,7 @@ def db_to_amplitude(db):
 class Shift(nn.Module):
     def __init__(
         self,
-        min_shif = -0.5,
+        min_shift = -0.5,
         max_shift = 0.5,
         shift_unit = "fraction",
         rollover = True,
@@ -83,8 +83,8 @@ class Shift(nn.Module):
             sample_rate ([type], optional): Defaults to None.
         """
         super().__init__()
-        self.min_shif = min_shif
-        self.max_shif = max_shif
+        self.min_shif = min_shift
+        self.max_shif = max_shift
         self.shift_unit = shift_unit
         self.rollover = rollover
         self.p = p
@@ -147,8 +147,8 @@ class Gain(nn.Module):
             x ([Tensor]): Waveform of shape [ch, n] or [n]
         """
         if random.random() < self.p:
-            x = x*db_to_amplitude(torch.randn(x.shape[-1]))
-        return x
+            x = x*db_to_amplitude(random.uniform(self.min_gain_db, self.max_gain_db))
+        return x.clamp(-1., 1.)
 
 
 class GaussianNoise(nn.Module):
@@ -182,7 +182,7 @@ class GaussianNoise(nn.Module):
                 random.uniform(self.min_snr, self.max_snr)
             )
             x = x + noiserms*torch.randn_like(x)
-        return x
+        return x.clamp(-1., 1.)
  
  
 class BackgroundNoise(nn.Module):
@@ -211,7 +211,7 @@ class BackgroundNoise(nn.Module):
         self.max_snr = max_snr
         self.p = p
 
-        if isinstance(noise, string):
+        if isinstance(noise, str):
             self.noise = glob.glob(f'{noise}/*.wav')
             self.is_file = True
         if isinstance(noise, (list, tuple, set)):
@@ -238,7 +238,7 @@ class BackgroundNoise(nn.Module):
                 sample_offset = random.randint(
                     0, background_num_samples - missing_num_samples
                 )
-                background_samples = noise[..., sample_offset: missing_num_samples]
+                background_samples = noise[..., sample_offset: sample_offset+missing_num_samples]
                 missing_num_samples = 0
             else:
                 background_samples = noise
@@ -264,7 +264,51 @@ class BackgroundNoise(nn.Module):
                 xrms, 
                 random.uniform(self.min_snr, self.max_snr)
             )
-            noise = random_backround(x)
-            x = x + noiserms*torch.randn_like(x)
-        return x
+            noise = self.random_background(x)
+            x = x + noiserms*noise
+        return x.clamp(-1., 1.)
  
+
+if __name__ == '__main__':
+    from utils import play_audio, plot_waveform, print_stats
+    audio_path = '../data/voice.wav'
+    audio, sample_rate = torchaudio.load(audio_path)
+    audio = audio[0].view(1, -1)
+
+    print_stats(audio, sample_rate=sample_rate)
+    plot_waveform(audio, sample_rate, title='Original Waveform', save='../output/original_audio.png')
+    play_audio(audio, sample_rate, )
+
+    # shift = Shift(
+    #     min_shift = -0.5,
+    #     max_shift = 0.5,
+    #     shift_unit = "fraction",
+    #     rollover = True,
+    #     p = 1.0,
+    #     sample_rate = None,
+    # )
+    # shifted = shift(audio)
+
+    # plot_waveform(shifted, sample_rate, title='Shift', save='../output/shifted_audio.png')
+    # play_audio(shifted, sample_rate, '../output/shifted_audio.wav')
+
+    # gain = Gain(min_gain_db=-18.0, max_gain_db=6.0, p=1.0)
+    # boosted = gain(audio)
+
+    # print_stats(boosted, sample_rate=sample_rate)
+    # plot_waveform(boosted, sample_rate, title='Gain', save='../output/gain_audio.png')
+    # play_audio(boosted, sample_rate, '../output/gain_audio.wav')
+
+    # gnoise = GaussianNoise(.5, .7, p=1.0)
+    # noisy = gnoise(audio)
+
+    # print_stats(noisy, sample_rate=sample_rate)
+    # plot_waveform(noisy, sample_rate, title='Gausian noise', save='../output/gain_audio.png')
+    # play_audio(noisy, sample_rate, '../output/gnoise_audio.wav')
+    
+    # bnoise = BackgroundNoise(0.5, 0.7, noise=['../data/train.wav', ], p=1.0)
+    # noisy = bnoise(audio)
+
+    # print_stats(noisy, sample_rate=sample_rate)
+    # plot_waveform(noisy, sample_rate, title='Backgroud noise', save='../output/gain_audio.png')
+    # play_audio(noisy, sample_rate, '../output/bnoise_audio.wav')

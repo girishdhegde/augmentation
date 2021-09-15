@@ -77,7 +77,9 @@ def plot_specgram(waveform, sample_rate, title="Spectrogram", xlim=None, save=No
     plt.show()
 
 
-def play_audio(waveform, sample_rate):
+def play_audio(waveform, sample_rate, save=None):
+    if save is not None:
+        torchaudio.save(save, waveform, sample_rate)
     waveform = waveform.numpy()
     sd.play(waveform[0], sample_rate, blocking=True)
 
